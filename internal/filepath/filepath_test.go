@@ -54,6 +54,16 @@ func TestGetFilePathFromOS(t *testing.T) {
 
 }
 
+func TestCombinePathsWithHomeDir(t *testing.T) {
+	var fakehomedir = "home/foo"
+	paths := []string{"foo", "bar", filepath.Join("something", "woo"), "hello/world"}
+	expected := []string{filepath.Join(fakehomedir, "foo"), filepath.Join(fakehomedir, "bar"), filepath.Join(fakehomedir, "something/woo"), filepath.Join(fakehomedir, "hello/world")}
+
+	result, err := combinePathsWithHomeDir(fakehomedir, paths)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+}
+
 func setupTempDir(dirname string, filename string) (string, error) {
 	dname, err := os.MkdirTemp("", dirname)
 	if err != nil {
