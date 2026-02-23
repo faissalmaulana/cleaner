@@ -11,15 +11,29 @@ import (
 // common xdg config directories
 var dirlocs = []string{".config", ".cache"}
 
-func GetFilePaths(fn func(path, pkg_name string) string, pkg_name string) []string {
+func GetFilePaths(fn func(path, pkg_name string) string, homedir, pkg_name string) ([]string, error) {
 	findPaths := make([]string, 0)
 
-	// TODO: resolve the dirlocs path before passed to fn
-	for _, dirloc := range dirlocs {
+	fullpaths, err := combinePathsWithHomeDir(homedir, dirlocs)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dirloc := range fullpaths {
 		findPaths = append(findPaths, fn(dirloc, pkg_name))
 	}
 
-	return findPaths
+	return findPaths, nil
+}
+
+func combinePathsWithHomeDir(homedir string, paths []string) ([]string, error) {
+	var fullapaths []string
+
+	for _, path := range paths {
+		fullapaths = append(fullapaths, filepath.Join(homedir, path))
+	}
+
+	return fullapaths, nil
 }
 
 func DeleteFilePaths(fn func(path string) error, filepaths []string) error {

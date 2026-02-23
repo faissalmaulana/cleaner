@@ -10,14 +10,17 @@ import (
 )
 
 func TestGetFilePaths(t *testing.T) {
+	var fakehomedir = "home/foo"
+
 	mockGetFilePathImplementation := func(pathname, pkg_name string) string {
 		return fmt.Sprintf("%s/%s", pathname, pkg_name)
 	}
 
 	pkg_name := "firefox"
-	expected := []string{".config/firefox", ".cache/firefox"}
+	expected := []string{filepath.Join(fakehomedir, ".config/firefox"), filepath.Join(fakehomedir, ".cache/firefox")}
 
-	result := GetFilePaths(mockGetFilePathImplementation, pkg_name)
+	result, err := GetFilePaths(mockGetFilePathImplementation, fakehomedir, pkg_name)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, result, "should be equal")
 
 }
