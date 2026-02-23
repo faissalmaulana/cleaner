@@ -49,23 +49,32 @@ func DeleteFilePaths(fn func(path string) error, filepaths []string) error {
 	return errors.Join(errs...)
 }
 
-func GetFilePathFromOS(dirloc, pkg string) (string, error) {
-	// read all files and folders inside the directory
+func getFilePathFromOS(dirloc, pkg string, isExact bool) (string, error) {
 	entries, err := os.ReadDir(dirloc)
 	if err != nil {
 		return "", err
 	}
 
-	// loop through each entry found in the directory
+	// pre-lower the search term once
+	searchLower := strings.ToLower(pkg)
+
 	for _, entry := range entries {
-		if strings.Contains(entry.Name(), pkg) {
-			fullpath := filepath.Join(dirloc, entry.Name())
-			// combine the directory path with the exact file name
-			fmt.Printf("find %s\n", fullpath)
-			return fullpath, nil
+		name := entry.Name()
+
+		if isExact && name == pkg {
+			return returnPath(dirloc, name)
+		}
+
+		if !isExact && strings.Contains(strings.ToLower(name), searchLower) {
+			return returnPath(dirloc, name)
 		}
 	}
 
-	// if the loop finishes without finding anything, return an empty string
-	return "", nil
+	return "", fmt.Errorf("not found")
+}
+
+func returnPath(dir, name string) (string, error) {
+	fullPath := filepath.Join(dir, name)
+	fmt.Printf("find %s\n", fullPath)
+	return fullPath, nil
 }

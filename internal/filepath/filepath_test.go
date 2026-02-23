@@ -47,7 +47,7 @@ func TestGetFilePathFromOS(t *testing.T) {
 	defer os.RemoveAll(dirloc)
 
 	expected := filepath.Join(dirloc, "hello_world.txt")
-	result, err := GetFilePathFromOS(dirloc, "hello")
+	result, err := getFilePathFromOS(dirloc, "hello", false)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
