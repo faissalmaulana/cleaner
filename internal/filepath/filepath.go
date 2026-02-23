@@ -3,6 +3,9 @@ package filepath
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 // common xdg config directories
@@ -30,4 +33,25 @@ func DeleteFilePaths(fn func(path string) error, filepaths []string) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func GetFilePathFromOS(dirloc, pkg string) (string, error) {
+	// read all files and folders inside the directory
+	entries, err := os.ReadDir(dirloc)
+	if err != nil {
+		return "", err
+	}
+
+	// loop through each entry found in the directory
+	for _, entry := range entries {
+		if strings.Contains(entry.Name(), pkg) {
+			fullpath := filepath.Join(dirloc, entry.Name())
+			// combine the directory path with the exact file name
+			fmt.Printf("find %s\n", fullpath)
+			return fullpath, nil
+		}
+	}
+
+	// if the loop finishes without finding anything, return an empty string
+	return "", nil
 }
