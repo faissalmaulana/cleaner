@@ -13,12 +13,12 @@ import (
 var dirlocs = []string{".config", ".cache"}
 
 func GetFilePaths(fn func(path, pkg_name string) (string, error), homedir, pkg_name string) ([]string, error) {
+	if homedir == "" || pkg_name == "" {
+		return nil, errors.New("homedir and pkg_name is required")
+	}
+
 	var errs []error
 	findPaths := make([]string, 0)
-
-	if err := validatePkgName(pkg_name); err != nil {
-		return nil, err
-	}
 
 	fullpaths, err := combinePathsWithHomeDir(homedir, dirlocs)
 	if err != nil {

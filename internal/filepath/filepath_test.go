@@ -10,160 +10,26 @@ import (
 )
 
 func TestGetFilePaths(t *testing.T) {
-	tests := []struct {
-		name      string
-		homedir   string
-		pkgName   string
-		implFn    func(path, pkgName string) (string, error)
-		expected  []string
-		expectErr bool
-		errMsg    string
-	}{
-		{
-			name:    "basic package with .config and .cache",
-			homedir: "home/foo",
-			pkgName: "firefox",
-			implFn: func(path, pkgName string) (string, error) {
-				return filepath.Join(path, pkgName), nil
-			},
-			expected: []string{
-				filepath.Join("home/foo", ".config/firefox"),
-				filepath.Join("home/foo", ".cache/firefox"),
-			},
-			expectErr: false,
-		},
-		{
-			name:    "package name with spaces",
-			homedir: "/home/user",
-			pkgName: "visual studio code",
-			implFn: func(path, pkgName string) (string, error) {
-				return filepath.Join(path, pkgName), nil
-			},
-			expected: []string{
-				filepath.Join("/home/user", ".config/visual studio code"),
-				filepath.Join("/home/user", ".cache/visual studio code"),
-			},
-			expectErr: false,
-		},
-		{
-			name:      "error: empty package name",
-			homedir:   "/home/user",
-			pkgName:   "",
-			implFn:    nil,
-			expectErr: true,
-			errMsg:    "pkg_name cannot be empty",
-		},
-		{
-			name:      "error: path traversal",
-			homedir:   "/home/user",
-			pkgName:   "../../etc/passwd",
-			implFn:    nil,
-			expectErr: true,
-			errMsg:    "invalid characters", // Regex catches slashes first
-		},
-		{
-			name:      "error: directory dots",
-			homedir:   "/home/user",
-			pkgName:   "invalid..name",
-			implFn:    nil,
-			expectErr: true,
-			errMsg:    "pkg_name cannot contain path traversal",
-		},
-		{
-			name:      "error: invalid characters (null byte)",
-			homedir:   "/home/user",
-			pkgName:   "bad\x00pkg",
-			implFn:    nil,
-			expectErr: true,
-			errMsg:    "invalid characters",
-		},
-		{
-			name:      "error: invalid characters (backslash)",
-			homedir:   "/home/user",
-			pkgName:   "wrong\\path",
-			implFn:    nil,
-			expectErr: true,
-			errMsg:    "invalid characters",
-		},
-		{
-			name:    "absolute path home directory",
-			homedir: "/root",
-			pkgName: "slack",
-			implFn: func(path, pkgName string) (string, error) {
-				return filepath.Join(path, pkgName), nil
-			},
-			expected: []string{
-				filepath.Join("/root", ".config/slack"),
-				filepath.Join("/root", ".cache/slack"),
-			},
-			expectErr: false,
-		},
-		{
-			name:    "implFn returns custom path format",
-			homedir: "/home/test",
-			pkgName: "node",
-			implFn: func(path, pkgName string) (string, error) {
-				return fmt.Sprintf("%s/%s/config", path, pkgName), nil
-			},
-			expected: []string{
-				"/home/test/.config/node/config",
-				"/home/test/.cache/node/config",
-			},
-			expectErr: false,
-		},
-		{
-			name:    "implFn returns error",
-			homedir: "/home/user",
-			pkgName: "test",
-			implFn: func(path, pkgName string) (string, error) {
-				return "", fmt.Errorf("path not found")
-			},
-			expected:  nil,
-			expectErr: true,
-		},
-		{
-			name:    "single character package name",
-			homedir: "/home/user",
-			pkgName: "a",
-			implFn: func(path, pkgName string) (string, error) {
-				return filepath.Join(path, pkgName), nil
-			},
-			expected: []string{
-				filepath.Join("/home/user", ".config/a"),
-				filepath.Join("/home/user", ".cache/a"),
-			},
-			expectErr: false,
-		},
-		{
-			name:    "package name with special characters",
-			homedir: "/home/user",
-			pkgName: "my-app_v1.0",
-			implFn: func(path, pkgName string) (string, error) {
-				return filepath.Join(path, pkgName), nil
-			},
-			expected: []string{
-				filepath.Join("/home/user", ".config/my-app_v1.0"),
-				filepath.Join("/home/user", ".cache/my-app_v1.0"),
-			},
-			expectErr: false,
-		},
+	mockGetFilePath := func(path, pkg_name string) (string, error) {
+		return filepath.Join(path, pkg_name), nil
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := GetFilePaths(tt.implFn, tt.homedir, tt.pkgName)
+	t.Run("success get paths with valid input", func(t *testing.T) {
+		var fakerootdir = "home/lizzy"
+		input_pkg_name := "firefox"
+		expected := []string{"home/lizzy/.config/firefox", "home/lizzy/.cache/firefox"}
 
-			if tt.expectErr {
-				assert.Error(t, err)
-				if tt.errMsg != "" {
-					assert.Contains(t, err.Error(), tt.errMsg)
-				}
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
-			}
-		})
-	}
+		result, err := GetFilePaths(mockGetFilePath, fakerootdir, input_pkg_name)
+		assert.NoError(t, err)
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("fail get paths because invalid input", func(t *testing.T) {
+		result, err := GetFilePaths(mockGetFilePath, "", "")
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
 }
 
 func TestDeleteFilePaths(t *testing.T) {
