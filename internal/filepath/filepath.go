@@ -5,14 +5,20 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
 // common xdg config directories
 var dirlocs = []string{".config", ".cache"}
 
-func GetFilePaths(fn func(path, pkg_name string) string, homedir, pkg_name string) ([]string, error) {
+func GetFilePaths(fn func(path, pkg_name string) (string, error), homedir, pkg_name string) ([]string, error) {
+	var errs []error
 	findPaths := make([]string, 0)
+
+	if err := validatePkgName(pkg_name); err != nil {
+		return nil, err
+	}
 
 	fullpaths, err := combinePathsWithHomeDir(homedir, dirlocs)
 	if err != nil {
@@ -20,10 +26,37 @@ func GetFilePaths(fn func(path, pkg_name string) string, homedir, pkg_name strin
 	}
 
 	for _, dirloc := range fullpaths {
-		findPaths = append(findPaths, fn(dirloc, pkg_name))
+		path, err := fn(dirloc, pkg_name)
+		if err != nil {
+			errs = append(errs, err)
+		}
+
+		findPaths = append(findPaths, path)
 	}
 
-	return findPaths, nil
+	return findPaths, errors.Join(errs...)
+}
+
+// validPkgRegex ensures the name contains only alphanumeric, spaces, dots, underscores, or dashes.
+var validPkgRegex = regexp.MustCompile(`^[a-zA-Z0-9 _.-]+$`)
+
+func validatePkgName(pkg_name string) error {
+	// check for empty or whitespace-only strings
+	if strings.TrimSpace(pkg_name) == "" {
+		return errors.New("pkg_name cannot be empty")
+	}
+
+	// use regex for character validation (blocks / \ and null bytes)
+	if !validPkgRegex.MatchString(pkg_name) {
+		return errors.New("pkg_name contains invalid characters")
+	}
+
+	// explicitly block path traversal '..' since regex allows single dots
+	if strings.Contains(pkg_name, "..") {
+		return errors.New("pkg_name cannot contain path traversal")
+	}
+
+	return nil
 }
 
 func combinePathsWithHomeDir(homedir string, paths []string) ([]string, error) {
