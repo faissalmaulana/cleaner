@@ -70,6 +70,10 @@ func combinePathsWithHomeDir(homedir string, paths []string) ([]string, error) {
 }
 
 func DeleteFilePaths(fn func(path string) error, filepaths []string) error {
+	if len(filepaths) == 0 || filepaths == nil {
+		return errors.New("filepaths is required")
+	}
+
 	var errs []error
 
 	for _, filepath := range filepaths {

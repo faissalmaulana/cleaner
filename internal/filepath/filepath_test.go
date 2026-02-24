@@ -1,9 +1,11 @@
 package filepath
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,10 +40,39 @@ func TestDeleteFilePaths(t *testing.T) {
 		return nil
 	}
 
-	filepaths := []string{".config/firefox", ".cache/firefox"}
-	err := DeleteFilePaths(mockDeleteFilePathImplementation, filepaths)
+	t.Run("success delete filepaths", func(t *testing.T) {
 
-	assert.NoError(t, err, "should success delete filepaths")
+		filepaths := []string{".config/firefox", ".cache/firefox"}
+
+		err := DeleteFilePaths(mockDeleteFilePathImplementation, filepaths)
+		assert.NoError(t, err)
+	})
+
+	t.Run("partial fail delete filepaths", func(t *testing.T) {
+		mockDeleteFilePathImplementation := func(path string) error {
+			available := []string{".config/chrome"}
+
+			found := slices.Contains(available, path)
+			if found {
+				fmt.Printf("deleted: %s", path)
+				return nil
+			} else {
+				return errors.New("path not found")
+			}
+
+		}
+
+		filepaths := []string{".config/chrome", ".cache/firefox"}
+
+		err := DeleteFilePaths(mockDeleteFilePathImplementation, filepaths)
+		assert.Error(t, err)
+	})
+
+	t.Run("fail delete filepaths because give empty input", func(t *testing.T) {
+		err := DeleteFilePaths(mockDeleteFilePathImplementation, []string{})
+		assert.Error(t, err)
+	})
+
 }
 
 func TestGetFilePathFromOS(t *testing.T) {
