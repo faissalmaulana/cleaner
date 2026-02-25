@@ -48,6 +48,37 @@ func TestGetFilePaths(t *testing.T) {
 		assert.Equal(t, expected, result)
 	})
 
+	t.Run("success get filepaths of exactly-typed package name", func(t *testing.T) {
+		config := filepath.Join(fakehomedir, ".config")
+		configpkgname := filepath.Join(config, "fire")
+
+		cache := filepath.Join(fakehomedir, ".cache")
+		cachepkgname := filepath.Join(cache, "fire")
+
+		err = os.MkdirAll(configpkgname, 0755)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = os.MkdirAll(cachepkgname, 0755)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		getExactFromOS := func(path, pkgName string) (string, error) {
+			return fp.GetFilePathFromOS(path, pkgName, true)
+		}
+
+		input := "fire"
+		expected := []string{configpkgname, cachepkgname}
+
+		result, err := fp.GetFilePaths(getExactFromOS, fakehomedir, input)
+
+		assert.NoError(t, err)
+		assert.Equal(t, expected, result)
+
+	})
+
 	t.Run("fail get filepaths because pkg_name not found", func(t *testing.T) {
 		getFromOS := func(path, pkgName string) (string, error) {
 			return fp.GetFilePathFromOS(path, pkgName, false)
