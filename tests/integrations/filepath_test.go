@@ -130,4 +130,39 @@ func TestDeleteFilePaths(t *testing.T) {
 		err = fp.DeleteFilePaths(os.Remove, samplefilepaths)
 		assert.Error(t, err)
 	})
+
+	t.Run("success delete symlink", func(t *testing.T) {
+		// .dotfiles/firefox (the real target)
+		dotfiles, err := os.MkdirTemp("", "dotfiles")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			os.RemoveAll(dotfiles)
+		})
+
+		err = os.MkdirAll(filepath.Join(dotfiles, "firefox"), 0755)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		//  .config/firefox-symlink -> .dotfiles/firefox
+		symlinkPath := filepath.Join(config, "firefox-symlink")
+		err = os.Symlink(dotfiles, symlinkPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		samplefilepaths := []string{symlinkPath}
+		err = fp.DeleteFilePaths(os.Remove, samplefilepaths)
+		assert.NoError(t, err)
+
+		// symlink itself should be gone
+		_, err = os.Lstat(symlinkPath)
+		assert.True(t, os.IsNotExist(err), "symlink should be removed")
+
+		// but .dotfiles/firefox must still exist
+		_, err = os.Stat(filepath.Join(dotfiles, "firefox"))
+		assert.NoError(t, err, ".dotfiles/firefox real target should still exist")
+	})
 }
