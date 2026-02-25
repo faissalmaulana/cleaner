@@ -17,8 +17,10 @@ func GetFilePaths(fn func(path, pkg_name string) (string, error), homedir, pkg_n
 		return nil, errors.New("homedir and pkg_name is required")
 	}
 
-	var errs []error
-	findPaths := make([]string, 0)
+	var (
+		errs      []error
+		findPaths []string
+	)
 
 	fullpaths, err := combinePathsWithHomeDir(homedir, dirlocs)
 	if err != nil {
@@ -27,8 +29,9 @@ func GetFilePaths(fn func(path, pkg_name string) (string, error), homedir, pkg_n
 
 	for _, dirloc := range fullpaths {
 		path, err := fn(dirloc, pkg_name)
-		if err != nil {
+		if err != nil || path == "" {
 			errs = append(errs, err)
+			continue
 		}
 
 		findPaths = append(findPaths, path)
@@ -86,7 +89,7 @@ func DeleteFilePaths(fn func(path string) error, filepaths []string) error {
 	return errors.Join(errs...)
 }
 
-func getFilePathFromOS(dirloc, pkg string, isExact bool) (string, error) {
+func GetFilePathFromOS(dirloc, pkg string, isExact bool) (string, error) {
 	entries, err := os.ReadDir(dirloc)
 	if err != nil {
 		return "", err
