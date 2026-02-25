@@ -10,6 +10,7 @@ import (
 )
 
 func TestGetFilePaths(t *testing.T) {
+	rootsdir := []string{".config", ".cache"}
 	fakehomedir, err := os.MkdirTemp("", "sampledir")
 	if err != nil {
 		t.Fatal(err)
@@ -42,7 +43,7 @@ func TestGetFilePaths(t *testing.T) {
 		input := "firefox"
 		expected := []string{configpkgname, cachepkgname}
 
-		result, err := fp.GetFilePaths(getFromOS, fakehomedir, input)
+		result, err := fp.GetFilePaths(getFromOS, fakehomedir, input, rootsdir)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
@@ -72,7 +73,7 @@ func TestGetFilePaths(t *testing.T) {
 		input := "fire"
 		expected := []string{configpkgname, cachepkgname}
 
-		result, err := fp.GetFilePaths(getExactFromOS, fakehomedir, input)
+		result, err := fp.GetFilePaths(getExactFromOS, fakehomedir, input, rootsdir)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
@@ -85,7 +86,7 @@ func TestGetFilePaths(t *testing.T) {
 		}
 
 		input := "somethingnotthere"
-		result, err := fp.GetFilePaths(getFromOS, fakehomedir, input)
+		result, err := fp.GetFilePaths(getFromOS, fakehomedir, input, rootsdir)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)

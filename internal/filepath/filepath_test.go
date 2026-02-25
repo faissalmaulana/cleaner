@@ -12,6 +12,8 @@ import (
 )
 
 func TestGetFilePaths(t *testing.T) {
+	var roots = []string{".config", ".cache"}
+
 	mockGetFilePath := func(path, pkg_name string) (string, error) {
 		return filepath.Join(path, pkg_name), nil
 	}
@@ -21,13 +23,13 @@ func TestGetFilePaths(t *testing.T) {
 		input_pkg_name := "firefox"
 		expected := []string{"home/lizzy/.config/firefox", "home/lizzy/.cache/firefox"}
 
-		result, err := GetFilePaths(mockGetFilePath, fakerootdir, input_pkg_name)
+		result, err := GetFilePaths(mockGetFilePath, fakerootdir, input_pkg_name, roots)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
 	})
 
 	t.Run("fail get paths because invalid input", func(t *testing.T) {
-		result, err := GetFilePaths(mockGetFilePath, "", "")
+		result, err := GetFilePaths(mockGetFilePath, "", "", roots)
 		assert.Error(t, err)
 		assert.Nil(t, result)
 	})

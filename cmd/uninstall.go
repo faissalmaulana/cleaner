@@ -15,6 +15,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// xdgDirs are the standard XDG user directories to search for package configs.
+var XDGDirs = []string{".config", ".cache"}
+
 // uninstallCmd represents the uninstall command
 var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
@@ -52,7 +55,7 @@ var uninstallCmd = &cobra.Command{
 			}
 		}
 
-		pkgfilepaths, err := fp.GetFilePaths(getFilepaths, homedir, args[0])
+		pkgfilepaths, err := fp.GetFilePaths(getFilepaths, homedir, args[0], XDGDirs)
 		if err != nil {
 			return err
 		}

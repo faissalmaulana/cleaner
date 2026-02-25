@@ -8,10 +8,7 @@ import (
 	"strings"
 )
 
-// common xdg config directories
-var dirlocs = []string{".config", ".cache"}
-
-func GetFilePaths(fn func(path, pkg_name string) (string, error), homedir, pkg_name string) ([]string, error) {
+func GetFilePaths(fn func(path, pkg_name string) (string, error), homedir, pkg_name string, roots []string) ([]string, error) {
 	if homedir == "" || pkg_name == "" {
 		return nil, errors.New("homedir and pkg_name is required")
 	}
@@ -21,7 +18,7 @@ func GetFilePaths(fn func(path, pkg_name string) (string, error), homedir, pkg_n
 		findPaths []string
 	)
 
-	fullpaths, err := combinePathsWithHomeDir(homedir, dirlocs)
+	fullpaths, err := combinePathsWithHomeDir(homedir, roots)
 	if err != nil {
 		return nil, err
 	}
