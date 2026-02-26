@@ -25,7 +25,7 @@ func TestGetFilePaths(t *testing.T) {
 
 		result, err := GetFilePaths(mockGetFilePath, fakerootdir, input_pkg_name, roots)
 		assert.NoError(t, err)
-		assert.Equal(t, expected, result)
+		assert.ElementsMatch(t, expected, result)
 	})
 
 	t.Run("fail get paths because invalid input", func(t *testing.T) {

@@ -6,31 +6,60 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
-func GetFilePaths(fn func(path, pkg_name string) (string, error), homedir, pkg_name string, roots []string) ([]string, error) {
-	if homedir == "" || pkg_name == "" {
-		return nil, errors.New("homedir and pkg_name is required")
-	}
+type result struct {
+	path string
+	err  error
+}
 
-	var (
-		errs      []error
-		findPaths []string
-	)
+func GetFilePaths(
+	fn func(path, pkgName string) (string, error),
+	homedir, pkgName string,
+	roots []string,
+) ([]string, error) {
+	if homedir == "" || pkgName == "" {
+		return nil, errors.New("homedir and pkgName is required")
+	}
 
 	fullpaths, err := combinePathsWithHomeDir(homedir, roots)
 	if err != nil {
 		return nil, err
 	}
 
+	var wg sync.WaitGroup
+	results := make(chan result)
+
 	for _, dirloc := range fullpaths {
-		path, err := fn(dirloc, pkg_name)
-		if err != nil || path == "" {
-			errs = append(errs, err)
-			continue
+		dir := dirloc
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			path, err := fn(dir, pkgName)
+			results <- result{path, err}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	var (
+		findPaths []string
+		errs      []error
+	)
+
+	for r := range results {
+		if r.err != nil {
+			errs = append(errs, r.err)
 		}
 
-		findPaths = append(findPaths, path)
+		if r.path != "" {
+			findPaths = append(findPaths, r.path)
+		}
 	}
 
 	return findPaths, errors.Join(errs...)
