@@ -80,16 +80,37 @@ func DeleteFilePaths(fn func(path string) error, filepaths []string) error {
 		return errors.New("filepaths is required")
 	}
 
-	var errs []error
+	var (
+		wg   sync.WaitGroup
+		errs []error
+	)
+
+	errchan := make(chan error)
 
 	for _, filepath := range filepaths {
-		err := fn(filepath)
+		fp := filepath
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			err := fn(fp)
+			errchan <- err
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(errchan)
+	}()
+
+	for err := range errchan {
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to delete %s: %w", filepath, err))
+			errs = append(errs, err)
 		}
 	}
 
 	return errors.Join(errs...)
+
 }
 
 func GetFilePathFromOS(dirloc, pkg string, isExact bool) (string, error) {

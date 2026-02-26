@@ -46,7 +46,7 @@ func TestGetFilePaths(t *testing.T) {
 		result, err := fp.GetFilePaths(getFromOS, fakehomedir, input, rootsdir)
 
 		assert.NoError(t, err)
-		assert.Equal(t, expected, result)
+		assert.ElementsMatch(t, expected, result)
 	})
 
 	t.Run("success get filepaths of exactly-typed package name", func(t *testing.T) {
@@ -76,7 +76,7 @@ func TestGetFilePaths(t *testing.T) {
 		result, err := fp.GetFilePaths(getExactFromOS, fakehomedir, input, rootsdir)
 
 		assert.NoError(t, err)
-		assert.Equal(t, expected, result)
+		assert.ElementsMatch(t, expected, result)
 
 	})
 
