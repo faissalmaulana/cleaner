@@ -28,24 +28,28 @@ var uninstallCmd = &cobra.Command{
 	Long: `uninstall will deletes package's config files
 `,
 	Aliases: []string{"u"},
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			return errors.New("package name is required")
+			cmd.PrintErrf("package name is required\n")
+			return
 		}
 
 		err := utils.ValidatePkgName(args[0])
 		if err != nil {
-			return err
+			cmd.PrintErrf("%v\n", err)
+			return
 		}
 
 		homedir, err := os.UserHomeDir()
 		if err != nil {
-			return err
+			cmd.PrintErrf("%v\n", err)
+			return
 		}
 
 		withExac, err := cmd.Flags().GetBool("ex")
 		if err != nil {
-			return err
+			cmd.PrintErrf("%v\n", err)
+			return
 		}
 
 		var getFilepaths = func(path, pkgName string) (string, error) {
@@ -85,9 +89,10 @@ var uninstallCmd = &cobra.Command{
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				fmt.Println("operation cancelled")
-				return nil
+				return
 			}
-			return err
+			cmd.PrintErrf("%v\n", err)
+			return
 		}
 
 		fmt.Print("Do you want to continue? (y/N): ")
@@ -99,7 +104,8 @@ var uninstallCmd = &cobra.Command{
 		for {
 			input, err := reader.ReadString('\n')
 			if err != nil {
-				return err
+				cmd.PrintErrf("%v\n", err)
+				return
 			}
 
 			input = strings.TrimSpace(strings.ToLower(input))
@@ -119,17 +125,16 @@ var uninstallCmd = &cobra.Command{
 
 		if !confirmed {
 			fmt.Println("Aborted.")
-			return nil
+			return
 		}
 
 		err = fp.DeleteFilePaths(ctx, os.Remove, pkgfilepaths)
 		if err != nil {
-			return err
+			cmd.PrintErrf("%v\n", err)
+			return
 		}
 
 		fmt.Printf("Done deleted configs of %s\n", args[0])
-
-		return nil
 	},
 }
 
