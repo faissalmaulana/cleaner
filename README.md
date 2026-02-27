@@ -4,7 +4,7 @@ Cleaner is a command line tool for Linux XDG-based desktop to automaticly delete
 
 ## Overview
 
-This tool is designed to be used after uninstallation of a package, when all configs in `$HOME` want to be deleted. Cleaner will search the package's configs in `.config`, `.cache`, etc..., and deletes all related config files of the package.
+Cleaner helps you clean up leftover configuration files after uninstalling a package on Linux XDG-based desktops. It searches for and removes the package's config files in standard XDG directories like `.config`, `.cache` within `$HOME`.
 
 ## Requirements
 
