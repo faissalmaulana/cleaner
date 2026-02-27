@@ -9,7 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	fp "github.com/faissalmaulana/cleaner/internal/filepath"
 	"github.com/faissalmaulana/cleaner/internal/utils"
@@ -59,8 +61,31 @@ var uninstallCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh,
+			syscall.SIGINT,  // Ctrl+C
+			syscall.SIGTERM, // kill / systemd stop
+			syscall.SIGHUP,  // terminal closed
+		)
+
+		// goroutine watches for signals
+		go func() {
+			select {
+			case _ = <-sigCh:
+				fmt.Printf("Cancelling...")
+				cancel()
+			case <-ctx.Done():
+				// just exit it
+			}
+			signal.Stop(sigCh)
+		}()
+
 		pkgfilepaths, err := fp.GetFilePaths(ctx, getFilepaths, homedir, args[0], XDGDirs)
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				fmt.Println("operation cancelled")
+				return nil
+			}
 			return err
 		}
 
