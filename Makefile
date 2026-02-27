@@ -1,4 +1,4 @@
-.PHONY: test-e2e clean-e2e tag build clean test
+.PHONY: test-e2e clean-e2e tag
 
 COVER_DIR=.coverdata
 
