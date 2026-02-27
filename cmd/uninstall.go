@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -55,7 +56,10 @@ var uninstallCmd = &cobra.Command{
 			}
 		}
 
-		pkgfilepaths, err := fp.GetFilePaths(getFilepaths, homedir, args[0], XDGDirs)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		pkgfilepaths, err := fp.GetFilePaths(ctx, getFilepaths, homedir, args[0], XDGDirs)
 		if err != nil {
 			return err
 		}

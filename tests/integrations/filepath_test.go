@@ -1,6 +1,7 @@
 package integrations_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -43,10 +44,28 @@ func TestGetFilePaths(t *testing.T) {
 		input := "firefox"
 		expected := []string{configpkgname, cachepkgname}
 
-		result, err := fp.GetFilePaths(getFromOS, fakehomedir, input, rootsdir)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		result, err := fp.GetFilePaths(ctx, getFromOS, fakehomedir, input, rootsdir)
 
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, expected, result)
+	})
+
+	t.Run("success cancel search filepaths", func(t *testing.T) {
+		getFromOS := func(path, pkgName string) (string, error) {
+			return fp.GetFilePathFromOS(path, pkgName, false)
+		}
+
+		input := "firefox"
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		result, err := fp.GetFilePaths(ctx, getFromOS, fakehomedir, input, rootsdir)
+		assert.ErrorIs(t, err, context.Canceled)
+		assert.Nil(t, result)
 	})
 
 	t.Run("success get filepaths of exactly-typed package name", func(t *testing.T) {
@@ -73,7 +92,10 @@ func TestGetFilePaths(t *testing.T) {
 		input := "fire"
 		expected := []string{configpkgname, cachepkgname}
 
-		result, err := fp.GetFilePaths(getExactFromOS, fakehomedir, input, rootsdir)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		result, err := fp.GetFilePaths(ctx, getExactFromOS, fakehomedir, input, rootsdir)
 
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, expected, result)
@@ -86,7 +108,11 @@ func TestGetFilePaths(t *testing.T) {
 		}
 
 		input := "somethingnotthere"
-		result, err := fp.GetFilePaths(getFromOS, fakehomedir, input, rootsdir)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		result, err := fp.GetFilePaths(ctx, getFromOS, fakehomedir, input, rootsdir)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)

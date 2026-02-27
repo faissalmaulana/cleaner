@@ -1,6 +1,7 @@
 package filepath
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -23,13 +24,32 @@ func TestGetFilePaths(t *testing.T) {
 		input_pkg_name := "firefox"
 		expected := []string{"home/lizzy/.config/firefox", "home/lizzy/.cache/firefox"}
 
-		result, err := GetFilePaths(mockGetFilePath, fakerootdir, input_pkg_name, roots)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		result, err := GetFilePaths(ctx, mockGetFilePath, fakerootdir, input_pkg_name, roots)
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, expected, result)
 	})
 
+	t.Run("success cancel search filepaths", func(t *testing.T) {
+		var fakerootdir = "home/lizzy"
+		input_pkg_name := "firefox"
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel() // cancel immediately — simulate user who already gave up
+
+		result, err := GetFilePaths(ctx, mockGetFilePath, fakerootdir, input_pkg_name, roots)
+
+		assert.ErrorIs(t, err, context.Canceled)
+		assert.Empty(t, result)
+	})
+
 	t.Run("fail get paths because invalid input", func(t *testing.T) {
-		result, err := GetFilePaths(mockGetFilePath, "", "", roots)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		result, err := GetFilePaths(ctx, mockGetFilePath, "", "", roots)
 		assert.Error(t, err)
 		assert.Nil(t, result)
 	})

@@ -1,6 +1,7 @@
 package filepath
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -15,6 +16,7 @@ type result struct {
 }
 
 func GetFilePaths(
+	ctx context.Context,
 	fn func(path, pkgName string) (string, error),
 	homedir, pkgName string,
 	roots []string,
@@ -28,17 +30,33 @@ func GetFilePaths(
 		return nil, err
 	}
 
-	var wg sync.WaitGroup
+	var (
+		wg        sync.WaitGroup
+		findPaths []string
+		errs      []error
+	)
+
 	results := make(chan result)
 
 	for _, dirloc := range fullpaths {
 		dir := dirloc
 		wg.Add(1)
-
 		go func() {
 			defer wg.Done()
+
+			select {
+			case <-ctx.Done():
+				return // goroutine exits immediately
+			default:
+			}
+
 			path, err := fn(dir, pkgName)
-			results <- result{path, err}
+
+			select {
+			case <-ctx.Done():
+				return // discard result after cancel
+			case results <- result{path, err}:
+			}
 		}()
 	}
 
@@ -47,22 +65,24 @@ func GetFilePaths(
 		close(results)
 	}()
 
-	var (
-		findPaths []string
-		errs      []error
-	)
+	for {
+		select {
+		case <-ctx.Done():
+			return findPaths, ctx.Err()
 
-	for r := range results {
-		if r.err != nil {
-			errs = append(errs, r.err)
-		}
-
-		if r.path != "" {
-			findPaths = append(findPaths, r.path)
+		// if the results chan closed we're done
+		case r, ok := <-results:
+			if !ok {
+				return findPaths, errors.Join(errs...)
+			}
+			if r.err != nil {
+				errs = append(errs, r.err)
+			}
+			if r.path != "" {
+				findPaths = append(findPaths, r.path)
+			}
 		}
 	}
-
-	return findPaths, errors.Join(errs...)
 }
 
 func combinePathsWithHomeDir(homedir string, paths []string) ([]string, error) {
