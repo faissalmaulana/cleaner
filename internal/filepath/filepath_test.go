@@ -66,8 +66,22 @@ func TestDeleteFilePaths(t *testing.T) {
 
 		filepaths := []string{".config/firefox", ".cache/firefox"}
 
-		err := DeleteFilePaths(mockDeleteFilePathImplementation, filepaths)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		err := DeleteFilePaths(ctx, mockDeleteFilePathImplementation, filepaths)
 		assert.NoError(t, err)
+	})
+
+	t.Run("success delete filepaths", func(t *testing.T) {
+
+		filepaths := []string{".config/firefox", ".cache/firefox"}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		err := DeleteFilePaths(ctx, mockDeleteFilePathImplementation, filepaths)
+		assert.ErrorIs(t, err, context.Canceled)
 	})
 
 	t.Run("partial fail delete filepaths", func(t *testing.T) {
@@ -86,12 +100,18 @@ func TestDeleteFilePaths(t *testing.T) {
 
 		filepaths := []string{".config/chrome", ".cache/firefox"}
 
-		err := DeleteFilePaths(mockDeleteFilePathImplementation, filepaths)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		err := DeleteFilePaths(ctx, mockDeleteFilePathImplementation, filepaths)
 		assert.Error(t, err)
 	})
 
 	t.Run("fail delete filepaths because give empty input", func(t *testing.T) {
-		err := DeleteFilePaths(mockDeleteFilePathImplementation, []string{})
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		err := DeleteFilePaths(ctx, mockDeleteFilePathImplementation, []string{})
 		assert.Error(t, err)
 	})
 

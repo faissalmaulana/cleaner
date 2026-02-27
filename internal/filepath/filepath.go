@@ -95,7 +95,7 @@ func combinePathsWithHomeDir(homedir string, paths []string) ([]string, error) {
 	return fullapaths, nil
 }
 
-func DeleteFilePaths(fn func(path string) error, filepaths []string) error {
+func DeleteFilePaths(ctx context.Context, fn func(path string) error, filepaths []string) error {
 	if len(filepaths) == 0 || filepaths == nil {
 		return errors.New("filepaths is required")
 	}
@@ -113,8 +113,20 @@ func DeleteFilePaths(fn func(path string) error, filepaths []string) error {
 
 		go func() {
 			defer wg.Done()
+
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
 			err := fn(fp)
-			errchan <- err
+
+			select {
+			case <-ctx.Done():
+				return
+			case errchan <- err:
+			}
 		}()
 	}
 
@@ -123,14 +135,19 @@ func DeleteFilePaths(fn func(path string) error, filepaths []string) error {
 		close(errchan)
 	}()
 
-	for err := range errchan {
-		if err != nil {
-			errs = append(errs, err)
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err, ok := <-errchan:
+			if !ok {
+				return errors.Join(errs...)
+			}
+			if err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
-
-	return errors.Join(errs...)
-
 }
 
 func GetFilePathFromOS(dirloc, pkg string, isExact bool) (string, error) {

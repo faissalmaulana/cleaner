@@ -146,14 +146,34 @@ func TestDeleteFilePaths(t *testing.T) {
 	}
 
 	t.Run("success delete filepaths", func(t *testing.T) {
+
 		samplefilepaths := []string{configpkgname, cachepkgname}
-		err = fp.DeleteFilePaths(os.Remove, samplefilepaths)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		err = fp.DeleteFilePaths(ctx, os.Remove, samplefilepaths)
 		assert.NoError(t, err)
+	})
+
+	t.Run("success cancel delete filepaths", func(t *testing.T) {
+
+		samplefilepaths := []string{configpkgname, cachepkgname}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		err = fp.DeleteFilePaths(ctx, os.Remove, samplefilepaths)
+		assert.ErrorIs(t, err, context.Canceled)
 	})
 
 	t.Run("fail delete filepaths because input filepaths is not found", func(t *testing.T) {
 		samplefilepaths := []string{filepath.Join(config, "chrome"), filepath.Join(cache, "chrome")}
-		err = fp.DeleteFilePaths(os.Remove, samplefilepaths)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		err = fp.DeleteFilePaths(ctx, os.Remove, samplefilepaths)
 		assert.Error(t, err)
 	})
 
@@ -180,7 +200,11 @@ func TestDeleteFilePaths(t *testing.T) {
 		}
 
 		samplefilepaths := []string{symlinkPath}
-		err = fp.DeleteFilePaths(os.Remove, samplefilepaths)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		err = fp.DeleteFilePaths(ctx, os.Remove, samplefilepaths)
 		assert.NoError(t, err)
 
 		// symlink itself should be gone

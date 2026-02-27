@@ -72,8 +72,9 @@ var uninstallCmd = &cobra.Command{
 		go func() {
 			select {
 			case _ = <-sigCh:
-				fmt.Printf("Cancelling...")
+				fmt.Printf("\nCancelling...\n")
 				cancel()
+				defer os.Exit(1)
 			case <-ctx.Done():
 				// just exit it
 			}
@@ -121,7 +122,7 @@ var uninstallCmd = &cobra.Command{
 			return nil
 		}
 
-		err = fp.DeleteFilePaths(os.Remove, pkgfilepaths)
+		err = fp.DeleteFilePaths(ctx, os.Remove, pkgfilepaths)
 		if err != nil {
 			return err
 		}
