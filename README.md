@@ -4,7 +4,7 @@ Cleaner is a command line tool for Linux XDG-based desktop to automaticly delete
 
 ## Overview
 
-This tool is designed to be used after uinstallation of a package, when all configs in `$HOME` want to be deleted. Cleaner will search the package's configs in `.config`, `.cache`, etc... and deletes all related config files of the package.
+This tool is designed to be used after uninstallation of a package, when all configs in `$HOME` want to be deleted. Cleaner will search the package's configs in `.config`, `.cache`, etc..., and deletes all related config files of the package.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ go install github.com/faissalmaulana/cleaner@latest
 ## Usage
 
 ```bash
-cleaner unistall chrome
+cleaner uninstall chrome
 ```
 
 ## Available Commands
@@ -38,12 +38,4 @@ Flags:
   -v, --version   version for cleaner
 
 Use "cleaner [command] --help" for more information about a command.
-```
-
-## Help Subcommands
-
-You can run `--help` for each subcommands to know more details about the subcommand and their flags:
-
-```bash
-cleaner uninstall --help
 ```
