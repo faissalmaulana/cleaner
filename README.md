@@ -1,24 +1,30 @@
-# cleaner is A Command Line Tool for linux xdg-based desktop to automaticly delete configs files of a package after uninstallation.
+# Cleaner
 
-## this tool is designed to used after uinstallation of a package, and all configs that already in $HOME want to be deleted. Cleaner will search the package's configs in ```.config```, ```.cache```, etc ...  and deletes all related-config files of the package.
+Cleaner is a command line tool for Linux XDG-based desktop to automaticly delete configs files of a package after uninstallation.
 
+## Overview
 
-## Requirements:
- - Go v1.26 or later
+This tool is designed to be used after uinstallation of a package, when all configs in `$HOME` want to be deleted. Cleaner will search the package's configs in `.config`, `.cache`, etc... and deletes all related config files of the package.
 
-## Installation: 
-install cleaner by using:
-```
+## Requirements
+
+- Go v1.26 or later
+
+## Installation
+
+```bash
 go install github.com/faissalmaulana/cleaner@latest
 ```
 
-## Usage:
-```
-cleaner uinstall chrome
+## Usage
+
+```bash
+cleaner unistall chrome
 ```
 
-## Available Commands:
-```
+## Available Commands
+
+```text
 Usage:
   cleaner [command]
 
@@ -34,8 +40,10 @@ Flags:
 Use "cleaner [command] --help" for more information about a command.
 ```
 
-## Help Subcommands:
-you can run ```--help``` for each subcommands to know more detail about the subcommand and their flags
-```
+## Help Subcommands
+
+You can run `--help` for each subcommands to know more details about the subcommand and their flags:
+
+```bash
 cleaner uninstall --help
 ```
